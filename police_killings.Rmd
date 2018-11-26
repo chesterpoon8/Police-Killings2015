@@ -1,0 +1,70 @@
+---
+title: "Tidyverse Recipe - Police Killings"
+author: "Chester Poon"
+date: "11/26/2018"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+---
+
+#Tidyverse Recipes for Police Killings in 2015.
+
+I'll be using the data behind police killings in 2015, which is available here:
+<https://github.com/fivethirtyeight/data/tree/master/police-killings>
+
+I'm actually using this same dataset for my Data 606 project, so a far deeper analysis is to come.
+
+###Loading the data
+
+First, we'll load just some of the data and then using dplyr's `select` function, well just take some of the variables that we want.
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+
+# load data - We'll pull just some of the variables we want.
+pd_killing <- read.csv('police_killings.csv')
+pd_killing <- select(pd_killing,name,
+                     raceethnicity,
+                     tract_ce,
+                     armed,
+                     pop,
+                     share_white,
+                     share_black,
+                     share_hispanic,
+                     h_income
+                     )
+```
+
+###Cleaning some of the data
+
+There are variables described as the share of the population in a certain census tract. For example, if the value is 50 for `share_white`, then this actually means that 50% of the population in that census tract is white. It would probably be more appropriate to convert these to the correct value of 0.5. The below code accomplishes this.
+
+```{r, message=FALSE, warning=FALSE}
+#Convert share to numeric proportion
+pd_killing$share_white <- 
+  as.numeric(levels(pd_killing$share_white))[as.integer(pd_killing$share_white)]/100
+pd_killing$share_black <- 
+  as.numeric(levels(pd_killing$share_black))[as.integer(pd_killing$share_black)]/100
+pd_killing$share_hispanic <- 
+  as.numeric(levels(pd_killing$share_hispanic))[as.integer(pd_killing$share_hispanic)]/100
+pd_killing$tract_ce <- as.factor(pd_killing$tract_ce)
+```
+
+###Subset our data
+
+Now that our data is generally clean, we can subset our data into a new data frame. I've left some room in `pd_ksub` for others to contribute where appropriate. `pd_killing` will also be preserved to leave some room for others to contribute as well.
+
+```{r, message=FALSE, warning=FALSE}
+#Subset and prepare the data.
+pd_ksub <- pd_killing %>%
+  filter(armed == 'No',
+         raceethnicity %in% c('White','Black')) %>%
+  select(raceethnicity,
+         pop,
+         tract_ce,
+         share_white,
+         share_black)
+
+knitr::kable(head(pd_ksub), format = "html")
+```
+
